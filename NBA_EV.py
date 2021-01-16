@@ -257,7 +257,7 @@ def get_EV(team1, bet1):
             lvh_prob_lose = 1-lvh_prob_win
     
             # #EV for lower tier team
-            oddsB = final_df['oddsB lower tier'].iloc[ind]
+            oddsB = final_df['oddsB higher tier'].iloc[ind]
             if final_df['Home_Team'].iloc[ind] == final_df['lower tier team'].iloc[ind]:
                 oddsA = float(Fraction(final_df['Home_fractional'].iloc[ind]))
                 bet2 = bet1*((oddsA+1)/(oddsB+1))
@@ -292,7 +292,7 @@ def get_EV(team1, bet1):
             hvl_prob_lose = 1-hvl_prob_win
     
             # EV_high_list = []
-            oddsB = final_df['oddsB higher tier'].iloc[ind]
+            oddsB = final_df['oddsB lower tier'].iloc[ind]
             if final_df['Home_Team'].iloc[ind] == final_df['higher tier team'].iloc[ind]:
                 oddsA = float(Fraction(final_df['Home_fractional'].iloc[ind]))
                 bet2 = bet1*((oddsA+1)/(oddsB+1))
@@ -321,6 +321,11 @@ def get_EV(team1, bet1):
          
         #THIS IS THE FINAL DF
         EV_df_over20 = EV_final_full[(EV_final_full['EV_low_tier'] >= 20) | (EV_final_full['EV_higher_tier'] >= 20)]
+        relevant_feats = ['Home_Points', 'Away_Points', 'Home_fractional', 'Away_fractional',
+                          'lower tier team', 'higher tier team', 'timeB', 'score',
+                          'EV_low_tier', 'EV_higher_tier', 'future_time_block', 
+                          'lvh_prob', 'hvl_prob', 'lvh_kelly', 'hvl_kelly']
+        EV_df_over20 = EV_df_over20[relevant_feats]
         if len(EV_df_over20.index) < 1:
             print("no situations have EV > 20")
         else:
