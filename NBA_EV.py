@@ -276,6 +276,8 @@ def get_EV(team1, bet1):
                 except:
                     lvh_kelly = 0
 
+            if EV_low < 0:
+                lvh_kelly = 0
         
         
                 
@@ -310,6 +312,8 @@ def get_EV(team1, bet1):
                     hvl_kelly = 0.02/(((1+0.02)/hvl_prob_win)-1)
                 except:
                     hvl_kelly = 0
+            if EV_high < 0:
+                hvl_kelly = 0
         
             ev_data = [{'index': ind, 'EV_low_tier': EV_low, 'EV_higher_tier': EV_high,
                         'future_time_block': future_time,'lvh_prob': lvh_prob_win,
@@ -320,7 +324,7 @@ def get_EV(team1, bet1):
         EV_final_full = final_df.merge(ev_out_df, left_index=True, right_on='index')
          
         #THIS IS THE FINAL DF
-        EV_df_over20 = EV_final_full[(EV_final_full['EV_low_tier'] >= 20) | (EV_final_full['EV_higher_tier'] >= 20)]
+        EV_df_over20 = EV_final_full[(20 <= EV_final_full['EV_low_tier'] <= 100) | (20 <= EV_final_full['EV_higher_tier'] <= 100)]
         if len(EV_df_over20.index) < 1:
             print("no situations have EV > 20")
         else:
