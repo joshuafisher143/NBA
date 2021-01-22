@@ -7,6 +7,7 @@ Created on Wed Aug 26 10:57:13 2020
 
 import pickle
 import pandas as pd
+import numpy as np
 import time
 import datetime
 from fractions import Fraction
