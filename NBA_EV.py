@@ -321,13 +321,25 @@ def get_EV(team1, bet1):
          
         #THIS IS THE FINAL DF
         EV_df_over20 = EV_final_full[(EV_final_full['EV_low_tier'] >= 20) | (EV_final_full['EV_higher_tier'] >= 20)]
+        
         if len(EV_df_over20.index) < 1:
             print("no situations have EV > 20")
         else:
             print('EVs over 20 found')
+            
+            #highlight median EV values
+            EV_low_idx = EV_df_over20.loc[EV_df_over20['EV_low_tier'] == np.median(EV_df_over20['EV_low_tier'])].index[0]
+            EV_high_idx = EV_df_over20.loc[EV_df_over20['EV_higher_tier'] == np.median(EV_df_over20['EV_higher_tier'])].index[0]
+            EV_idx_list = [EV_low_idx, EV_high_idx]
+            EV_df_over20 = EV_df_over20.style.apply(lambda x: ['background: yellow' if x.name in [EV_idx_list]
+                              else '' for i in x], axis=1)
             #Save EV df to html and then have it open in browser
             print("saving final dataframe to html and opening in browser")
-            EV_df_over20.to_html('C:/Users/joshu/Documents/py_projects/joe_model/CDF_API/EV_over20.html')
+            df_html = EV_df_over20.render()
+            
+            with open('C:/Users/joshu/Documents/py_projects/joe_model/CDF_API/EV_over20.html', 'w') as f:
+                f.write(df_html)
+            # EV_df_over20.to_html('C:/Users/joshu/Documents/py_projects/joe_model/CDF_API/EV_over20.html')
             webbrowser.open('C:/Users/joshu/Documents/py_projects/joe_model/CDF_API/EV_over20.html')
 
 
