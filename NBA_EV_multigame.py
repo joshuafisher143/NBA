@@ -46,7 +46,7 @@ def get_EV(bet1):
         #pull game info
         print("pulling game stats")
 ####YOU HAVE TO CHANGE MONTH IN LINK AT THE END OF EACH MONTH####
-        game_info = requests.get('https://nba.cheapdatafeeds.com/api/json/scores/v1/basketball/nba?month=01&year=2021&seasonType=Regular&api-key=051e498ade189575df68ffc7044b34d6')
+        game_info = requests.get('api-key')
         game_info_dict = game_info.json()
         
         #make empty dataframe to append the data to
@@ -110,7 +110,7 @@ def get_EV(bet1):
                 
         #pull game odds 
         print("pulling Bovada game odds")
-        game_odds = requests.get('https://bovada-basketball-nba.cheapdatafeeds.com/api/json/odds/v2/basketball/nba?api-key=051e498ade189575df68ffc7044b34d6')
+        game_odds = requests.get('api-key')
         go_dict = game_odds.json()
         
         odds_df = pd.DataFrame(columns = ['GameID', 'Home_fractional', 'Away_fractional'])
