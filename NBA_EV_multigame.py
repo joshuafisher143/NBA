@@ -46,7 +46,7 @@ def get_EV(bet1):
         #pull game info
         print("pulling game stats")
 ####YOU HAVE TO CHANGE MONTH IN LINK AT THE END OF EACH MONTH####
-        game_info = requests.get('api-key')
+        game_info = requests.get('https://nba.cheapdatafeeds.com/api/json/scores/v1/basketball/nba?month=01&year=2021&seasonType=Regular&api-key=051e498ade189575df68ffc7044b34d6')
         game_info_dict = game_info.json()
         
         #make empty dataframe to append the data to
@@ -64,7 +64,7 @@ def get_EV(bet1):
                 try:    
                     current_quarter = game_info_dict['games'][key]['currentPeriod']
                 except:
-                    print('in intermission')
+                    print('{} vs {} in intermission or timeout'.format(Home_team, Away_team))
                     continue
                     
             
@@ -110,30 +110,33 @@ def get_EV(bet1):
                 
         #pull game odds 
         print("pulling Bovada game odds")
-        game_odds = requests.get('api-key')
+        game_odds = requests.get('https://bovada-basketball-nba.cheapdatafeeds.com/api/json/odds/v2/basketball/nba?api-key=051e498ade189575df68ffc7044b34d6')
         go_dict = game_odds.json()
         
         odds_df = pd.DataFrame(columns = ['GameID', 'Home_fractional', 'Away_fractional'])
         
         for key_2 in go_dict['games'].keys():
-            if go_dict['games'][key_2]['isLive'] == '1':
-                if 'gameMoneylineHomePrice' in go_dict['games'][key_2].keys():
-                    Home_ML = int(go_dict['games'][key_2]['gameMoneylineHomePrice'])
-                    if Home_ML > 0:
-                        Home_fractional = Home_ML / 100
+            try:
+                if go_dict['games'][key_2]['isLive'] == '1':
+                    if 'gameMoneylineHomePrice' in go_dict['games'][key_2].keys():
+                        Home_ML = int(go_dict['games'][key_2]['gameMoneylineHomePrice'])
+                        if Home_ML > 0:
+                            Home_fractional = Home_ML / 100
+                        else:
+                            Home_fractional = (-100)/ Home_ML
+                        Away_ML = int(go_dict['games'][key_2]['gameMoneylineAwayPrice'])
+                        if Away_ML > 0:
+                            Away_fractional = Away_ML / 100
+                        else:
+                            Away_fractional = (-100) / Away_ML
                     else:
-                        Home_fractional = (-100)/ Home_ML
-                    Away_ML = int(go_dict['games'][key_2]['gameMoneylineAwayPrice'])
-                    if Away_ML > 0:
-                        Away_fractional = Away_ML / 100
-                    else:
-                        Away_fractional = (-100) / Away_ML
-                else:
-                    print("no money line listed for game {} vs {}".format(go_dict['games'][key_2]['homeTeam'], go_dict['games'][key_2]['awayTeam']))
-                    
-            GameID = go_dict['games'][key_2]['gameUID']
-            odds_df = odds_df.append({'GameID':GameID, 'Home_fractional':Home_fractional,
-                                      'Away_fractional':Away_fractional}, ignore_index=True)
+                        print("no money line listed for game {} vs {}".format(go_dict['games'][key_2]['homeTeam'], go_dict['games'][key_2]['awayTeam']))
+                        
+                GameID = go_dict['games'][key_2]['gameUID']
+                odds_df = odds_df.append({'GameID':GameID, 'Home_fractional':Home_fractional,
+                                          'Away_fractional':Away_fractional}, ignore_index=True)
+            except:
+                continue
                 
         live_df = game_df.merge(odds_df, on=['GameID'])
         live_df = live_df.set_index('GameID')
@@ -153,7 +156,8 @@ def get_EV(bet1):
             daily_file_filtered = daily_file[daily_file['time_sec'] > live_df['Time_elapsed'].loc[game]]
             #filter out teams that don't relate to current looped index
             df_filt_oneT = daily_file_filtered.loc[(daily_file_filtered['lower tier team'] == live_df['Home_Team'].loc[game]) | (daily_file_filtered['higher tier team'] == live_df['Home_Team'].loc[game]),:]
-                
+            if len(df_filt_oneT) < 1:
+                continue
             #merge the filtered daily file and the live_df
             if live_df['Home_Team'].loc[game] == df_filt_oneT['lower tier team'].iloc[0]:
                 final_df = live_df.merge(df_filt_oneT,
@@ -332,7 +336,7 @@ def get_EV(bet1):
                             'future_time_block': future_time,'lvh_prob': lvh_prob_win,
                             'hvl_prob':hvl_prob_win, 'lvh_kelly':lvh_kelly, 'hvl_kelly':hvl_kelly}]
                 ev_out_df = ev_out_df.append(ev_data, ignore_index=True, sort=False)
-                
+
 
      
             EV_final_full = final_df.merge(ev_out_df, left_index=True, right_on='index')
@@ -350,10 +354,11 @@ def get_EV(bet1):
         
 
     
-            if len(EV_df_over20.index) > 1:
+            if len(EV_df_over20.index) < 1:
+                print('no EVs over 20 found in {} vs {}'.format(EV_final_full['Home_Team'].iloc[0], EV_final_full['Away_Team'].iloc[0]))
                 continue
             else:
-                print('EVs over 20 found')
+                print('EVs over 20 found in {} vs {}'.format(EV_final_full['Home_Team'].iloc[0], EV_final_full['Away_Team'].iloc[0]))
                 try:
                     EV_low_idx = EV_df_over20.loc[EV_df_over20['EV_low_tier'] == np.median(EV_df_over20['EV_low_tier'])].index[0]
                     if EV_df_over20['EV_low_tier'].loc[EV_low_idx] > 0:
@@ -375,7 +380,7 @@ def get_EV(bet1):
                         median_df = median_df.append(EV_high_median,ignore_index=True, sort=False)
             
     
-        if len(median_df.index) > 1:
+        if len(median_df.index) > 0:
             #Save EV df to html and then have it open in browser
             print("saving final dataframe to html and opening in browser")
             median_df.to_html('C:/Users/joshu/Documents/py_projects/joe_model/CDF_API/EV_over20.html')
@@ -385,7 +390,7 @@ def get_EV(bet1):
 
 
                 
-            
+        print('iteration has ended')    
         time.sleep(65)
 
 
