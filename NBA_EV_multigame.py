@@ -17,19 +17,10 @@ import requests
 import json
 import glob
 
-
-lvh_pkl = 'C:/Users/joshu/Documents/py_projects/joe_model/CDF_API/lvh_prob_final.pkl'
-with open(lvh_pkl, 'rb') as file:
-    lvh_prob_dict = pickle.load(file)
     
 lvh_count_pkl = 'C:/Users/joshu/Documents/py_projects/joe_model/CDF_API/lvh_count_final.pkl'
 with open(lvh_count_pkl, 'rb') as file:
     lvh_count_dict = pickle.load(file)
-
-#hvl means better team is losing (negative score diff)    
-hvl_pkl = 'C:/Users/joshu/Documents/py_projects/joe_model/CDF_API/hvl_prob_final.pkl'
-with open(hvl_pkl, 'rb') as file:
-    hvl_prob_dict = pickle.load(file)
 
 hvl_count_pkl = 'C:/Users/joshu/Documents/py_projects/joe_model/CDF_API/hvl_count_final.pkl'
 with open(hvl_count_pkl, 'rb') as file:
@@ -42,11 +33,10 @@ def get_EV(bet1):
 
     while True:
         print(datetime.datetime.now())
-        # bet1 = 100
         #pull game info
         print("pulling game stats")
 ####YOU HAVE TO CHANGE MONTH IN LINK AT THE END OF EACH MONTH####
-        game_info = requests.get('api-key')
+        game_info = requests.get(api-key)
         game_info_dict = game_info.json()
         
         #make empty dataframe to append the data to
@@ -110,7 +100,7 @@ def get_EV(bet1):
                 
         #pull game odds 
         print("pulling Bovada game odds")
-        game_odds = requests.get('api-key')
+        game_odds = requests.get(api-key)
         go_dict = game_odds.json()
         
         odds_df = pd.DataFrame(columns = ['GameID', 'Home_fractional', 'Away_fractional'])
@@ -190,81 +180,21 @@ def get_EV(bet1):
             
             
             for ind in final_df.index: 
-                if final_df['Time_elapsed'].iloc[ind] <=180:
-                    time_block = 1
-                elif 180 < final_df['Time_elapsed'].iloc[ind] <= 360:
-                    time_block = 2
-                elif 360 < final_df['Time_elapsed'].iloc[ind] <= 540:
-                    time_block = 3
-                elif 540 < final_df['Time_elapsed'].iloc[ind] <= 720:
-                    time_block = 4
-                elif 720 < final_df['Time_elapsed'].iloc[ind] <= 900:
-                    time_block = 5
-                elif 900 < final_df['Time_elapsed'].iloc[ind] <= 1080:
-                    time_block = 6
-                elif 1080 < final_df['Time_elapsed'].iloc[ind] <= 1260:
-                    time_block = 7
-                elif 1260 < final_df['Time_elapsed'].iloc[ind] <= 1440:
-                    time_block = 8
-                elif 1440 < final_df['Time_elapsed'].iloc[ind] <= 1620:
-                    time_block = 9
-                elif 1620 < final_df['Time_elapsed'].iloc[ind] <= 1800:
-                    time_block = 10
-                elif 1800 < final_df['Time_elapsed'].iloc[ind] <= 1980:
-                    time_block = 11
-                elif 1980 < final_df['Time_elapsed'].iloc[ind] <= 2160:
-                    time_block = 12
-                elif 2160 < final_df['Time_elapsed'].iloc[ind] <= 2340:
-                    time_block = 13
-                elif 2340 < final_df['Time_elapsed'].iloc[ind] <= 2520:
-                    time_block = 14
-                elif 2520 < final_df['Time_elapsed'].iloc[ind] <= 2700:
-                    time_block = 15
-                else:
-                    time_block = 16
-    
-            
-    
-                if final_df['time_sec'].iloc[ind] <=180:
-                    future_time = 1
-                elif 180 < final_df['time_sec'].iloc[ind] <= 360:
-                    future_time = 2
-                elif 360 < final_df['time_sec'].iloc[ind] <= 540:
-                    future_time = 3
-                elif 540 < final_df['time_sec'].iloc[ind] <= 720:
-                    future_time = 4
-                elif 720 < final_df['time_sec'].iloc[ind] <= 900:
-                    future_time = 5
-                elif 900 < final_df['time_sec'].iloc[ind] <= 1080:
-                    future_time = 6
-                elif 1080 < final_df['time_sec'].iloc[ind] <= 1260:
-                    future_time = 7
-                elif 1260 < final_df['time_sec'].iloc[ind] <= 1440:
-                    future_time = 8
-                elif 1440 < final_df['time_sec'].iloc[ind] <= 1620:
-                    future_time = 9
-                elif 1620 < final_df['time_sec'].iloc[ind] <= 1800:
-                    future_time = 10
-                elif 1800 < final_df['time_sec'].iloc[ind] <= 1980:
-                    future_time = 11
-                elif 1980 < final_df['time_sec'].iloc[ind] <= 2160:
-                    future_time = 12
-                elif 2160 < final_df['time_sec'].iloc[ind] <= 2340:
-                    future_time = 13
-                elif 2340 < final_df['time_sec'].iloc[ind] <= 2520:
-                    future_time = 14
-                elif 2520 < final_df['time_sec'].iloc[ind] <= 2700:
-                    future_time = 15
-                else:
-                    future_time = 16
+                time_block = int(abs(final_df['Time_elapsed'].iloc[ind]-1)/180) + 1
+                future_time = int(abs(final_df['time_sec'].iloc[ind]-1)/180) + 1
+
                 
                 
                 # for ind in final_df.index:
                 time_score = str(time_block) + ',' + str(score_diff)
                 future_score = final_df['score'].iloc[ind]
                 if lvh_count_dict[tier_matchup][time_score][str(future_time)][str(future_score)][0] > 49:
-                    lvh_prob_win_dist = lvh_prob_dict[tier_matchup][time_score][str(future_time)]
-                    lvh_prob_win = lvh_prob_win_dist.loc[:,str(future_score):].sum(axis=1)[0]
+                    lvh_prob_win_dist = lvh_count_dict[tier_matchup][time_score][str(future_time)].copy()
+                    lvh_prob_win_dist.loc[:,'-60':'59'] = lvh_prob_win_dist.div(lvh_prob_win_dist.sum(axis=1)[0], axis=0)
+                    if score_diff < future_score:
+                        lvh_prob_win = lvh_prob_win_dist.loc[:,str(future_score):].sum(axis=1)[0]
+                    else:
+                        lvh_prob_win = lvh_prob_win_dist.loc[:,:str(future_score)].sum(axis=1)[0]
                 else:
                     lvh_prob_win = 0
     
@@ -302,8 +232,12 @@ def get_EV(bet1):
                 time_score = str(time_block) + ',' + str(high_score_diff)
                 high_future_score = final_df['score'].iloc[ind]
                 if hvl_count_dict[tier_matchup][time_score][str(future_time)][str(high_future_score)][0] > 49:
-                    hvl_prob_win_dist = hvl_prob_dict[tier_matchup][time_score][str(future_time)]
-                    hvl_prob_win = hvl_prob_win_dist.loc[:,str(high_future_score):].sum(axis=1)[0]
+                    hvl_prob_win_dist = hvl_count_dict[tier_matchup][time_score][str(future_time)].copy()
+                    hvl_prob_win_dist.loc[:,'-60':'59'] = hvl_prob_win_dist.div(hvl_prob_win_dist.sum(axis=1)[0], axis=0)
+                    if high_score_diff < high_future_score:
+                        hvl_prob_win = hvl_prob_win_dist.loc[:,str(high_future_score):].sum(axis=1)[0]
+                    else:
+                        hvl_prob_win = hvl_prob_win_dist.loc[:,:str(high_future_score)].sum(axis=1)[0]
                 else:
                     hvl_prob_win = 0
     
