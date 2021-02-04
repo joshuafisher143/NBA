@@ -15,7 +15,6 @@ import webbrowser
 import scipy.io
 import requests
 import json
-import glob
 
     
 lvh_count_pkl = 'C:/Users/joshu/Documents/py_projects/joe_model/CDF_API/lvh_count_final.pkl'
