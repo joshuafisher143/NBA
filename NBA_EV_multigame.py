@@ -17,18 +17,18 @@ import requests
 import json
 
     
-lvh_count_pkl = 'C:/Users/joshu/Documents/py_projects/joe_model/CDF_API/lvh_count_final.pkl'
+lvh_count_pkl = lvh_count_path
 with open(lvh_count_pkl, 'rb') as file:
     lvh_count_dict = pickle.load(file)
 
-hvl_count_pkl = 'C:/Users/joshu/Documents/py_projects/joe_model/CDF_API/hvl_count_final.pkl'
+hvl_count_pkl = hvl_count_path
 with open(hvl_count_pkl, 'rb') as file:
     hvl_count_dict = pickle.load(file)
 
 pd.set_option('display.max_columns', None)
 pd.set_option('display.max_rows', None)
 
-def get_EV(bet1):
+def get_EV(bet1,bank_roll):
 
     while True:
         print(datetime.datetime.now())
@@ -50,6 +50,7 @@ def get_EV(bet1):
                 Away_team = game_info_dict['games'][key]['awayTeam']
                 Home_points = game_info_dict['games'][key]['scoreHomeTotal']
                 Away_points = game_info_dict['games'][key]['scoreAwayTotal']
+                # print('{}:{} and {}:{}'.format(Home_team, Home_points, Away_team, Away_points))
                 try:    
                     current_quarter = game_info_dict['games'][key]['currentPeriod']
                 except:
@@ -120,8 +121,11 @@ def get_EV(bet1):
                             Away_fractional = (-100) / Away_ML
                     else:
                         print("no money line listed for game {} vs {}".format(go_dict['games'][key_2]['homeTeam'], go_dict['games'][key_2]['awayTeam']))
+                        Home_fractional = 0
+                        Away_fractional = 0
                         
                 GameID = go_dict['games'][key_2]['gameUID']
+                odds_df = odds_df[(odds_df['Home_fractional'] > 0) & (odds_df['Away_fractional'] > 0)]
                 odds_df = odds_df.append({'GameID':GameID, 'Home_fractional':Home_fractional,
                                           'Away_fractional':Away_fractional}, ignore_index=True)
             except:
@@ -133,11 +137,11 @@ def get_EV(bet1):
         #filter out rows in which time_sec > real time elapsed
         print("reading in daily file")
 
-        daily_file = pd.read_csv('C:/Users/joshu/Documents/py_projects/joe_model/CDF_API/daily_file.csv')
+        daily_file = pd.read_csv(daily_file_path)
         
-        median_df = pd.DataFrame(columns=['Home_Points', 'Away_Points', 'Home_fractional', 'Away_fractional',
-                              'lower tier team', 'higher tier team', 'timeB', 'score',
-                              'EV_low_tier', 'EV_higher_tier', 'future_time_block', 'lvh_prob', 'hvl_prob',
+        median_df = pd.DataFrame(columns=['lower tier team', 'higher tier team','lower tier points', 'higher tier points',
+                                          'lower tier fractional', 'higher tier fractional','timeB', 'score',
+                              'EV_low_tier', 'EV_higher_tier', 'oddsB lower tier ML', 'oddsB higher tier ML', 'lvh_prob', 'hvl_prob',
                               'lvh_kelly', 'hvl_kelly'])
         
         for game in live_df.index:
@@ -173,7 +177,7 @@ def get_EV(bet1):
             
             
             tier_matchup = str(final_df['lower tier'][0]) + ',' + str(final_df['higher tier'][0])
-            ev_out_df = pd.DataFrame(columns=['index', 'EV_low_tier', 'EV_higher_tier', 'future_time_block', 'lvh_prob', 'hvl_prob', 'lvh_kelly', 'hvl_kelly'])
+            ev_out_df = pd.DataFrame(columns=['index', 'EV_low_tier', 'EV_higher_tier', 'future_time_block', 'oddsB lower tier ML', 'oddsB higher tier ML', 'lvh_prob', 'hvl_prob', 'lvh_kelly', 'hvl_kelly'])
     
     
             
@@ -200,22 +204,22 @@ def get_EV(bet1):
                 lvh_prob_lose = 1-lvh_prob_win
         
                 # #EV for lower tier team
-                oddsB = final_df['oddsB higher tier'].iloc[ind]
+                oddsB_low = final_df['oddsB lower tier'].iloc[ind]
                 if final_df['Home_Team'].iloc[ind] == final_df['lower tier team'].iloc[ind]:
-                    oddsA = float(Fraction(final_df['Home_fractional'].iloc[ind]))
-                    bet2 = bet1*((oddsA+1)/(oddsB+1))
-                    EV_low = ((((bet1*oddsA)-bet2)*.5)+(((bet2*oddsB)-bet1)*.5))*lvh_prob_win-(bet1*lvh_prob_lose)
+                    oddsA_low = float(Fraction(final_df['Home_fractional'].iloc[ind]))
+                    bet2 = bet1*((oddsA_low+1)/(oddsB_low+1))
+                    EV_low = ((((bet1*oddsA_low)-bet2)*.5)+(((bet2*oddsB_low)-bet1)*.5))*lvh_prob_win-(bet1*lvh_prob_lose)
                     try:
-                        lvh_kelly = (0.02/(((1+0.02)/lvh_prob_win)-1))*2000
+                        lvh_kelly = (0.02/(((1+0.02)/lvh_prob_win)-1))*bank_roll
                     except:
                         lvh_kelly = 0
     
                 else:
-                    oddsA = float(Fraction(final_df['Away_fractional'].iloc[ind]))
-                    bet2 = bet1*((oddsA+1)/(oddsB+1))
-                    EV_low = ((((bet1*oddsA)-bet2)*.5)+(((bet2*oddsB)-bet1)*.5))*lvh_prob_win-(bet1*lvh_prob_lose)
+                    oddsA_low = float(Fraction(final_df['Away_fractional'].iloc[ind]))
+                    bet2 = bet1*((oddsA_low+1)/(oddsB_low+1))
+                    EV_low = ((((bet1*oddsA_low)-bet2)*.5)+(((bet2*oddsB_low)-bet1)*.5))*lvh_prob_win-(bet1*lvh_prob_lose)
                     try:
-                        lvh_kelly = (0.02/(((1+0.02)/lvh_prob_win)-1))*2000
+                        lvh_kelly = (0.02/(((1+0.02)/lvh_prob_win)-1))*bank_roll
                     except:
                         lvh_kelly = 0
                         
@@ -243,42 +247,59 @@ def get_EV(bet1):
                 hvl_prob_lose = 1-hvl_prob_win
         
                 # EV_high_list = []
-                oddsB = final_df['oddsB lower tier'].iloc[ind]
+                oddsB_high = final_df['oddsB higher tier'].iloc[ind]
                 if final_df['Home_Team'].iloc[ind] == final_df['higher tier team'].iloc[ind]:
-                    oddsA = float(Fraction(final_df['Home_fractional'].iloc[ind]))
-                    bet2 = bet1*((oddsA+1)/(oddsB+1))
-                    EV_high = ((((bet1*oddsA)-bet2)*.5)+(((bet2*oddsB)-bet1)*.5))*hvl_prob_win-(bet1*hvl_prob_lose)
+                    oddsA_high = float(Fraction(final_df['Home_fractional'].iloc[ind]))
+                    bet2 = bet1*((oddsA_high+1)/(oddsB_high+1))
+                    EV_high = ((((bet1*oddsA_high)-bet2)*.5)+(((bet2*oddsB_high)-bet1)*.5))*hvl_prob_win-(bet1*hvl_prob_lose)
                     try:    
-                        hvl_kelly = (0.02/(((1+0.02)/hvl_prob_win)-1))*2000
+                        hvl_kelly = (0.02/(((1+0.02)/hvl_prob_win)-1))*bank_roll
                     except:
                         hvl_kelly = 0
     
                 else:
-                    oddsA = float(Fraction(final_df['Away_fractional'].iloc[ind]))
-                    bet2 = bet1*((oddsA+1)/(oddsB+1))
-                    EV_high = ((((bet1*oddsA)-bet2)*.5)+(((bet2*oddsB)-bet1)*.5))*hvl_prob_win-(bet1*hvl_prob_lose)
+                    oddsA_high = float(Fraction(final_df['Away_fractional'].iloc[ind]))
+                    bet2 = bet1*((oddsA_high+1)/(oddsB_high+1))
+                    EV_high = ((((bet1*oddsA_high)-bet2)*.5)+(((bet2*oddsB_high)-bet1)*.5))*hvl_prob_win-(bet1*hvl_prob_lose)
                     try:    
-                        hvl_kelly = (0.02/(((1+0.02)/hvl_prob_win)-1))*2000
+                        hvl_kelly = (0.02/(((1+0.02)/hvl_prob_win)-1))*bank_roll
                     except:
                         hvl_kelly = 0
                         
                 if EV_high < 0:
                     hvl_kelly = 0
+                    
+                if oddsB_low > 1:
+                    oddsB_low_ML = oddsB_low*100
+                else:
+                    oddsB_low_ML = (-100)/oddsB_low
+                    
+                if oddsB_high > 1:
+                    oddsB_high_ML = oddsB_high*100
+                else:
+                    oddsB_high_ML = (-100)/oddsB_high
             
                 ev_data = [{'index': ind, 'EV_low_tier': EV_low, 'EV_higher_tier': EV_high,
-                            'future_time_block': future_time,'lvh_prob': lvh_prob_win,
+                            'future_time_block': future_time,'lvh_prob': lvh_prob_win, 'oddsB lower tier ML':oddsB_low_ML, 'oddsB higher tier ML':oddsB_high_ML,
                             'hvl_prob':hvl_prob_win, 'lvh_kelly':lvh_kelly, 'hvl_kelly':hvl_kelly}]
                 ev_out_df = ev_out_df.append(ev_data, ignore_index=True, sort=False)
 
 
      
             EV_final_full = final_df.merge(ev_out_df, left_index=True, right_on='index')
-             
+            
+            
+            if EV_final_full['Home_Team'].iloc[0] == EV_final_full['lower tier team'].iloc[0]:
+                EV_final_full = EV_final_full.rename(columns={'Home_Points':'lower tier points', 'Away_Points': 'higher tier points',
+                                              'Home_fractional':'lower tier fractional', 'Away_fractional':'higher tier fractional'})
+            else:
+                EV_final_full = EV_final_full.rename(columns={'Home_Points':'higher tier points', 'Away_Points': 'lower tier points',
+                                              'Home_fractional':'higher tier fractional', 'Away_fractional':'lower tier fractional'})
             #THIS IS THE FINAL DF
             EV_df_over20 = EV_final_full[(EV_final_full['EV_low_tier'].between(20,100)) | (EV_final_full['EV_higher_tier'].between(20,100))]
-            relevant_feats = ['Home_Points', 'Away_Points', 'Home_fractional', 'Away_fractional',
+            relevant_feats = ['lower tier points', 'higher tier points', 'lower tier fractional', 'higher tier fractional',
                               'lower tier team', 'higher tier team', 'timeB', 'score',
-                              'EV_low_tier', 'EV_higher_tier', 'future_time_block', 'lvh_prob', 'hvl_prob',
+                              'EV_low_tier', 'EV_higher_tier', 'oddsB lower tier ML', 'oddsB higher tier ML', 'lvh_prob', 'hvl_prob',
                               'lvh_kelly', 'hvl_kelly']
             EV_df_over20 = EV_df_over20[relevant_feats]
 
@@ -288,10 +309,10 @@ def get_EV(bet1):
 
     
             if len(EV_df_over20.index) < 1:
-                print('no EVs over 20 found in {} vs {}'.format(EV_final_full['Home_Team'].iloc[0], EV_final_full['Away_Team'].iloc[0]))
+                print('no EVs over 20 found in {} vs {}'.format(EV_final_full['lower tier team'].iloc[0], EV_final_full['higher tier team'].iloc[0]))
                 continue
             else:
-                print('EVs over 20 found in {} vs {}'.format(EV_final_full['Home_Team'].iloc[0], EV_final_full['Away_Team'].iloc[0]))
+                print('EVs over 20 found in {} vs {}'.format(EV_final_full['lower tier team'].iloc[0], EV_final_full['higher tier team'].iloc[0]))
                 try:
                     EV_low_idx = EV_df_over20.loc[EV_df_over20['EV_low_tier'] == np.median(EV_df_over20['EV_low_tier'])].index[0]
                     if EV_df_over20['EV_low_tier'].loc[EV_low_idx] > 0:
@@ -304,20 +325,20 @@ def get_EV(bet1):
                 
                 try:
                     EV_high_idx = EV_df_over20.loc[EV_df_over20['EV_higher_tier'] == np.median(EV_df_over20['EV_higher_tier'])].index[0]
-                    if EV_df_over20['EV_higher_tier'].loc[EV_low_idx] > 0:
+                    if EV_df_over20['EV_higher_tier'].loc[EV_high_idx] > 0:
                         median_df = median_df.append(EV_df_over20.loc[EV_high_idx],ignore_index=True, sort=False)
                 except:
                     EV_high_sort = EV_df_over20.iloc[(EV_df_over20['EV_higher_tier']-np.median(EV_df_over20['EV_higher_tier'])).abs().argsort()[:2]]
                     EV_high_median = EV_high_sort.iloc[0]
-                    if EV_df_over20['EV_higher_tier'].loc[EV_low_idx] > 0:
+                    if EV_high_median['EV_higher_tier'] > 0:
                         median_df = median_df.append(EV_high_median,ignore_index=True, sort=False)
             
     
         if len(median_df.index) > 0:
             #Save EV df to html and then have it open in browser
             print("saving final dataframe to html and opening in browser")
-            median_df.to_html('C:/Users/joshu/Documents/py_projects/joe_model/CDF_API/EV_over20.html')
-            webbrowser.open('C:/Users/joshu/Documents/py_projects/joe_model/CDF_API/EV_over20.html')
+            median_df.to_html(output_html_path)
+            webbrowser.open(output_html_path)
             
 
 
