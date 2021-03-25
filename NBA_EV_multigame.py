@@ -17,21 +17,15 @@ import requests
 import json
 
     
-<<<<<<< HEAD
+lvh_count_pkl = lvh_count_path
 lvh_count_pkl = lvh_count_pkl
 with open(lvh_count_pkl, 'rb') as file:
     lvh_count_dict = pickle.load(file)
 
 hvl_count_pkl = hvl_count_pkl
-=======
-lvh_count_pkl = lvh_count_path
 with open(lvh_count_pkl, 'rb') as file:
     lvh_count_dict = pickle.load(file)
 
-hvl_count_pkl = hvl_count_path
->>>>>>> 11a70e56f43492a684de9dcd5cb9fc26ec445a47
-with open(hvl_count_pkl, 'rb') as file:
-    hvl_count_dict = pickle.load(file)
 
 pd.set_option('display.max_columns', None)
 pd.set_option('display.max_rows', None)
@@ -43,11 +37,10 @@ def get_EV(bet1,bank_roll):
         #pull game info
         print("pulling game stats")
 ####YOU HAVE TO CHANGE MONTH IN LINK AT THE END OF EACH MONTH####
-<<<<<<< HEAD
+
         game_info = requests.get(api_key)
-=======
+
         game_info = requests.get(api-key)
->>>>>>> 11a70e56f43492a684de9dcd5cb9fc26ec445a47
         game_info_dict = game_info.json()
         
         #make empty dataframe to append the data to
@@ -112,11 +105,8 @@ def get_EV(bet1,bank_roll):
                 
         #pull game odds 
         print("pulling Bovada game odds")
-<<<<<<< HEAD
         game_odds = requests.get(api_key)
-=======
         game_odds = requests.get(api-key)
->>>>>>> 11a70e56f43492a684de9dcd5cb9fc26ec445a47
         go_dict = game_odds.json()
         
         odds_df = pd.DataFrame(columns = ['GameID', 'Home_fractional', 'Away_fractional'])
@@ -153,11 +143,9 @@ def get_EV(bet1,bank_roll):
         #filter out rows in which time_sec > real time elapsed
         print("reading in daily file")
 
-<<<<<<< HEAD
         daily_file = pd.read_csv(daily_file)
-=======
+
         daily_file = pd.read_csv(daily_file_path)
->>>>>>> 11a70e56f43492a684de9dcd5cb9fc26ec445a47
         
         median_df = pd.DataFrame(columns=['lower tier team', 'higher tier team','lower tier points', 'higher tier points',
                                           'lower tier fractional', 'higher tier fractional','timeB', 'score',
@@ -206,13 +194,11 @@ def get_EV(bet1,bank_roll):
                 time_block = int(abs(final_df['Time_elapsed'].iloc[ind]-1)/180) + 1
                 future_time = int(abs(final_df['time_sec'].iloc[ind]-1)/180) + 1
 
-<<<<<<< HEAD
                 oddsB_low = final_df['oddsB lower tier'].iloc[ind]
                 oddsB_high = final_df['oddsB higher tier'].iloc[ind]
-=======
+
                 
-                
->>>>>>> 11a70e56f43492a684de9dcd5cb9fc26ec445a47
+
                 # for ind in final_df.index:
                 time_score = str(time_block) + ',' + str(score_diff)
                 future_score = final_df['score'].iloc[ind]
@@ -229,18 +215,18 @@ def get_EV(bet1,bank_roll):
                 lvh_prob_lose = 1-lvh_prob_win
         
                 # #EV for lower tier team
-<<<<<<< HEAD
+
                 if final_df['Home_Team'].iloc[ind] == final_df['lower tier team'].iloc[ind]:
                     oddsA_low = float(Fraction(final_df['Home_fractional'].iloc[ind]))
                     bet2 = bet1*((oddsA_low+1)/(oddsB_high+1))
                     EV_low = ((((bet1*oddsA_low)-bet2)*.5)+(((bet2*oddsB_high)-bet1)*.5))*lvh_prob_win-(bet1*lvh_prob_lose)
-=======
+
                 oddsB_low = final_df['oddsB lower tier'].iloc[ind]
                 if final_df['Home_Team'].iloc[ind] == final_df['lower tier team'].iloc[ind]:
                     oddsA_low = float(Fraction(final_df['Home_fractional'].iloc[ind]))
                     bet2 = bet1*((oddsA_low+1)/(oddsB_low+1))
                     EV_low = ((((bet1*oddsA_low)-bet2)*.5)+(((bet2*oddsB_low)-bet1)*.5))*lvh_prob_win-(bet1*lvh_prob_lose)
->>>>>>> 11a70e56f43492a684de9dcd5cb9fc26ec445a47
+
                     try:
                         lvh_kelly = (0.02/(((1+0.02)/lvh_prob_win)-1))*bank_roll
                     except:
@@ -248,13 +234,13 @@ def get_EV(bet1,bank_roll):
     
                 else:
                     oddsA_low = float(Fraction(final_df['Away_fractional'].iloc[ind]))
-<<<<<<< HEAD
+
                     bet2 = bet1*((oddsA_low+1)/(oddsB_high+1))
                     EV_low = ((((bet1*oddsA_low)-bet2)*.5)+(((bet2*oddsB_high)-bet1)*.5))*lvh_prob_win-(bet1*lvh_prob_lose)
-=======
+
                     bet2 = bet1*((oddsA_low+1)/(oddsB_low+1))
                     EV_low = ((((bet1*oddsA_low)-bet2)*.5)+(((bet2*oddsB_low)-bet1)*.5))*lvh_prob_win-(bet1*lvh_prob_lose)
->>>>>>> 11a70e56f43492a684de9dcd5cb9fc26ec445a47
+
                     try:
                         lvh_kelly = (0.02/(((1+0.02)/lvh_prob_win)-1))*bank_roll
                     except:
@@ -284,19 +270,19 @@ def get_EV(bet1,bank_roll):
                 hvl_prob_lose = 1-hvl_prob_win
         
                 # EV_high_list = []
-<<<<<<< HEAD
+
 
                 if final_df['Home_Team'].iloc[ind] == final_df['higher tier team'].iloc[ind]:
                     oddsA_high = float(Fraction(final_df['Home_fractional'].iloc[ind]))
                     bet2 = bet1*((oddsA_high+1)/(oddsB_low+1))
                     EV_high = ((((bet1*oddsA_high)-bet2)*.5)+(((bet2*oddsB_low)-bet1)*.5))*hvl_prob_win-(bet1*hvl_prob_lose)
-=======
+
                 oddsB_high = final_df['oddsB higher tier'].iloc[ind]
                 if final_df['Home_Team'].iloc[ind] == final_df['higher tier team'].iloc[ind]:
                     oddsA_high = float(Fraction(final_df['Home_fractional'].iloc[ind]))
                     bet2 = bet1*((oddsA_high+1)/(oddsB_high+1))
                     EV_high = ((((bet1*oddsA_high)-bet2)*.5)+(((bet2*oddsB_high)-bet1)*.5))*hvl_prob_win-(bet1*hvl_prob_lose)
->>>>>>> 11a70e56f43492a684de9dcd5cb9fc26ec445a47
+
                     try:    
                         hvl_kelly = (0.02/(((1+0.02)/hvl_prob_win)-1))*bank_roll
                     except:
@@ -304,13 +290,13 @@ def get_EV(bet1,bank_roll):
     
                 else:
                     oddsA_high = float(Fraction(final_df['Away_fractional'].iloc[ind]))
-<<<<<<< HEAD
+
                     bet2 = bet1*((oddsA_high+1)/(oddsB_low+1))
                     EV_high = ((((bet1*oddsA_high)-bet2)*.5)+(((bet2*oddsB_low)-bet1)*.5))*hvl_prob_win-(bet1*hvl_prob_lose)
-=======
+
                     bet2 = bet1*((oddsA_high+1)/(oddsB_high+1))
                     EV_high = ((((bet1*oddsA_high)-bet2)*.5)+(((bet2*oddsB_high)-bet1)*.5))*hvl_prob_win-(bet1*hvl_prob_lose)
->>>>>>> 11a70e56f43492a684de9dcd5cb9fc26ec445a47
+
                     try:    
                         hvl_kelly = (0.02/(((1+0.02)/hvl_prob_win)-1))*bank_roll
                     except:
@@ -387,24 +373,20 @@ def get_EV(bet1,bank_roll):
         if len(median_df.index) > 0:
             #Save EV df to html and then have it open in browser
             print("saving final dataframe to html and opening in browser")
-<<<<<<< HEAD
+
             median_df.to_html(output)
             chrome="open -a /Applications/Google\ Chrome.app %s"
             webbrowser.get(chrome).open_new_tab(output)
-=======
+
             median_df.to_html(output_html_path)
             webbrowser.open(output_html_path)
->>>>>>> 11a70e56f43492a684de9dcd5cb9fc26ec445a47
+
             
 
 
 
                 
         print('iteration has ended')    
-<<<<<<< HEAD
-        print('joey has a small pp')
-=======
->>>>>>> 11a70e56f43492a684de9dcd5cb9fc26ec445a47
         time.sleep(65)
 
 
