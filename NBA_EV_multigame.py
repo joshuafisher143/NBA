@@ -18,13 +18,12 @@ import json
 
     
 lvh_count_pkl = lvh_count_path
-lvh_count_pkl = lvh_count_pkl
 with open(lvh_count_pkl, 'rb') as file:
     lvh_count_dict = pickle.load(file)
 
-hvl_count_pkl = hvl_count_pkl
-with open(lvh_count_pkl, 'rb') as file:
-    lvh_count_dict = pickle.load(file)
+hvl_count_pkl = hvl_count_path
+with open(hvl_count_pkl, 'rb') as file:
+    hvl_count_dict = pickle.load(file)
 
 
 pd.set_option('display.max_columns', None)
